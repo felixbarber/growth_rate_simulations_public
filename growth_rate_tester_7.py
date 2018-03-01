@@ -17,9 +17,11 @@ td_std = [0.4727, 0.9214]
 # td_std = [0.1, 0.1]
 
 # this script uses a simple adder model
+#   SAME AS GROWTH_RATE_TESTER_5 EXCEPT THIS INCLUDES NONZERO NOISE IN GROWTH RATE
+
 
 par1 = {'nstep': 1000, 'dt':0.01, 'td': td, 'td_std': td_std, 'v_init':1.0, 'modeltype':1, 'A_mm':0.129,
-    'trans_std_mm':0.9916, 'A_md':0.5086, 'trans_std_md':0.8610, 'delta':1.0, 'lambda_std':None}
+    'trans_std_mm':0.9916, 'A_md':0.5086, 'trans_std_md':0.8610, 'delta':1.0, 'lambda_std':0.3}
 
 # defining r and lambda to approximate the same average division times for daughters and mothers.
 
@@ -58,4 +60,4 @@ for i0 in range(11):
         output_data[3, i0, i1] = temp2[1][2]**2
         print 'finished', i0, i1
         del temp1, tgrow, temp2, t1, t2, t3, t4, opt_val, init_pop, c, obs
-np.save('./growth_rate_tester_5_output_data',output_data)
+np.save('./growth_rate_tester_5_output_data_1',output_data)

@@ -2,6 +2,8 @@ import numpy as np
 import scipy
 import scipy.optimize
 import weakref
+import matplotlib
+matplotlib.use("agg")
 import matplotlib.pyplot as plt
 import time
 import seaborn as sns
@@ -67,7 +69,13 @@ class Cell(object):
             #     print par1['A_mm'], self.td_zscore, par1['trans_std_mm'], self.t_grow
         elif par1['modeltype'] == 1:  # simple adder model
             temp_zscore = np.random.normal(0.0, 1.0, size=1)[0]
-            self.t_grow = np.log(1 + par1['delta'] / self.vb) / par1['lambda'] + temp_zscore*par1['td_std'][self.celltype]
+            if par1['lambda_std'] is None:
+                self.t_grow = np.log(1 + par1['delta'] / self.vb) / par1['lambda'] + temp_zscore*par1['td_std'][self.celltype]
+            else:
+                temp = np.random.normal(0.0, 1.0, size=1)[0]
+                self.gr = par1['lambda']*(1+par1['lambda_std']*temp)
+                self.t_grow = np.log(1 + par1['delta'] / self.vb) / self.gr + temp_zscore * par1['td_std'][
+                    self.celltype]
             # print self.t_grow
         self.t_div = self.tb + np.amax([self.t_grow, 0.0])
         self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)
@@ -295,4 +303,20 @@ def discr_gen_1(par1, starting_pop):
                 c = next_gen(index, c, i+1, par1)
                 # iterate through c to produce a new mother daughter pair for each cell
     return c
+
+
+def heat_maps(obs, labels, x_std, y_std):  # assumes obs has y then x
+    font = {'family': 'normal', 'weight': 'bold', 'size': 12}
+    plt.rc('font', **font)
+    model = ['dilution symmetric', 'initiator symmetric']
+    # plots = [0, 1, 3, 4]
+    figs=[]
+    for i in range(obs.shape[0]):
+        figs.append(plt.figure(figsize=[11, 10]))
+        sns.heatmap(obs[i, ::-1, :], xticklabels=np.around(x_std, decimals=2), \
+                         yticklabels=np.around(y_std[::-1], decimals=2), annot=False)
+        plt.xlabel(labels[1][0],size=20)
+        plt.ylabel(labels[1][1], size=20)
+        plt.title(labels[0][i], size=20)
+    return figs
 

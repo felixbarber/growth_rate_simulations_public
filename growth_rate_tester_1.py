@@ -3,6 +3,8 @@
 import numpy as np
 import scipy
 import scipy.optimize
+import matplotlib
+matplotlib.use("agg")
 import matplotlib.pyplot as plt
 import time
 from scipy import stats

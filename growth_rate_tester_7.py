@@ -60,4 +60,4 @@ for i0 in range(11):
         output_data[3, i0, i1] = temp2[1][2]**2
         print 'finished', i0, i1
         del temp1, tgrow, temp2, t1, t2, t3, t4, opt_val, init_pop, c, obs
-np.save('./growth_rate_tester_5_output_data_1',output_data)
+np.save('./growth_rate_tester_7_output_data',output_data)

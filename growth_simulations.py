@@ -108,8 +108,14 @@ class Cell(object):
                 self.td_out_zscores = [np.random.normal(0.0,1.0,size=1)[0]]  # only one output z-score in this case
         elif par1['modeltype'] == 1:  # simple adder model
             temp_zscore = np.random.normal(0.0, 1.0, size=1)[0]
-            self.t_grow = np.log(1 + par1['delta'] / self.vb) / par1['lambda'] + temp_zscore * par1['td_std'][
-                self.celltype]
+            if par1['lambda_std'] is None:
+                self.t_grow = np.log(1 + par1['delta'] / self.vb) / par1['lambda'] + temp_zscore * par1['td_std'][
+                    self.celltype]
+            else:
+                temp = np.random.normal(0.0, 1.0, size=1)[0]
+                self.gr = par1['lambda'] * (1 + par1['lambda_std'] * temp)
+                self.t_grow = np.log(1 + par1['delta'] / self.vb) / self.gr + temp_zscore * par1['td_std'][
+                    self.celltype]
             # print self.t_grow
         self.t_div = self.tb + np.amax([self.t_grow, 0.0])
         self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)

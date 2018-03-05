@@ -122,6 +122,16 @@ class Cell(object):
         Cell.cellCount += 1
 
 
+    def size(self, par1, t):  # this evaluates the volume of this cell at a particular point in time
+        if par1['modeltype']==1:
+            if par1['lambda_std'] is None:
+                temp = par1['lambda']
+            else:
+                temp = self.gr
+            temp1 = self.vb*np.exp(temp*(t-self.tb))
+        return temp1
+
+
 def starting_popn(par1):
     # To clarify we first set the initial condition for the simulation.
     l = par1['lambda']
@@ -227,6 +237,7 @@ def discr_time_1(par1, starting_pop):
     num_div_m = np.zeros(tvec.shape)  # keep track of the number of divisions from daughter cells
     av_v = np.zeros(tvec.shape)
     std_v = np.zeros(tvec.shape)
+    vol = np.zeros(tvec.shape)
     # Define lists which will keep track of the time step in which each cell divides.
     div_times = []
     for i in range(nstep + 1):
@@ -286,12 +297,14 @@ def discr_time_1(par1, starting_pop):
                     # interval
                     del td_ind
                 del t_div
+        vol[i] = np.sum([obj.size(par1, tvec[i]) for obj in c if obj.exists])  # cumulative size of the cells at each
+        # timestep
         num_cells[i] = len(c)
         temp_val = [obj.vb for obj in c if obj.exists]
         av_v[i] = np.mean(temp_val)
         std_v[i] = np.std(temp_val)
         num_existent_cells[i] = len(temp_val)
-    obs = [num_cells, tvec, num_div_d, num_div_m, num_existent_cells, av_v, std_v]
+    obs = [num_cells, tvec, num_div_d, num_div_m, num_existent_cells, av_v, std_v, vol]
     return c, obs
 
 

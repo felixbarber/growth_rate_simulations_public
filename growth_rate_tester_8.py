@@ -42,10 +42,11 @@ for i0 in range(11):
             par1['lambda_std'] = gr_vals[i2]+offset
             init_pop = g.starting_popn(par1)
             c,obs = g.discr_time_1(par1, init_pop)
+
             temp1 = scipy.stats.linregress(obs[1][400:], np.log(obs[4][400:]))
             tgrow = []
-            for i2 in range(2):
-                tgrow.append([obj.t_grow for obj in c[10**4:] if obj.celltype == i2])
+            for i3 in range(2):
+                tgrow.append([obj.t_grow for obj in c[10**4:] if obj.celltype == i3])
             opt_val=scipy.optimize.fsolve(g.fn, x0=np.log(2.0)/np.mean(par1['td']), args=(np.mean(tgrow[0]), np.mean(tgrow[1])))[0]
             output_data[0, i0, i1, i2] = temp1[0]
             output_data[1, i0, i1, i2] = opt_val
@@ -69,6 +70,11 @@ for i0 in range(11):
             output_data[4, i0, i1, i2] = temp2[2][2] ** 2
             temp3 = scipy.stats.linregress(obs[1][400:], np.log(obs[7][400:]))
             output_data[5, i0, i1, i2] = temp3[0]
+
+            stored_vals = np.zeros([len(obs), len(obs[1])])
+            for i4 in range(len(obs)):
+                stored_vals[i4, :] = obs[i4][:]
+            np.save('./data/growth_rate_tester_8_{0}_{1}_{2}.npy'.format(i0, i1, i2), stored_vals)
             print 'finished', i0, i1, i2
-            del temp1, tgrow, temp2, t1, t2, t3, t4, opt_val, init_pop, c, obs
+            del temp1, tgrow, temp2, t1, t2, t3, t4, opt_val, init_pop, c, obs, stored_vals
 np.save('./growth_rate_tester_8_output_data',output_data)

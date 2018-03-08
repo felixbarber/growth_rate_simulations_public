@@ -17,7 +17,6 @@ td_std = [0.4727, 0.9214]
 # td_std = [0.1, 0.1]
 
 # this script uses a simple adder model
-#   SAME AS GROWTH_RATE_TESTER_5 EXCEPT THIS INCLUDES NONZERO NOISE IN GROWTH RATE
 
 
 par1 = {'nstep': 1000, 'dt':0.01, 'td': td, 'td_std': td_std, 'v_init':1.0, 'modeltype':1, 'A_mm':0.129,

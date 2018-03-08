@@ -77,7 +77,8 @@ class Cell(object):
                 self.t_grow = np.log(1 + par1['delta'] / self.vb) / self.gr + temp_zscore * par1['td_std'][
                     self.celltype]
             # print self.t_grow
-        self.t_div = self.tb + np.amax([self.t_grow, 0.0])
+        # self.t_div = self.tb + np.amax([self.t_grow, 0.0])
+        self.t_div = self.tb + self.t_grow
         self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)
         Cell.cellCount += 1
 

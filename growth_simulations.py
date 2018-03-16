@@ -67,19 +67,40 @@ class Cell(object):
                 self.td_out_zscores = [np.random.normal(0.0, 1.0, size=1)[0]]  # only one output z-score in this case
             # we effectively seed the first generation as though born from parents with a z-score of zero
             #     print par1['A_mm'], self.td_zscore, par1['trans_std_mm'], self.t_grow
+            self.t_div = self.tb + self.t_grow
+            self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)
         elif par1['modeltype'] == 1:  # simple adder model
             temp_zscore = np.random.normal(0.0, 1.0, size=1)[0]
             if par1['lambda_std'] is None:
                 self.t_grow = np.log(1 + par1['delta'] / self.vb) / par1['lambda'] + temp_zscore*par1['td_std'][self.celltype]
+                self.t_div = self.tb + self.t_grow
+                self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)
             else:
                 temp = np.random.normal(0.0, 1.0, size=1)[0]
                 self.gr = par1['lambda']*(1+par1['lambda_std']*temp)
                 self.t_grow = np.log(1 + par1['delta'] / self.vb) / self.gr + temp_zscore * par1['td_std'][
                     self.celltype]
+                self.t_div = self.tb + self.t_grow
+                self.vd = self.vb * np.exp(self.gr * self.t_grow)
+        elif par1['modeltype'] == 2:  # alpha tunable model from Lin and Amir
+            temp_zscore = np.random.normal(0.0, 1.0, size=1)[0]
+            if par1['lambda_std'] is None:
+                self.t_grow = np.log((2*par1['alpha']*par1['delta']+2*(1.0-par1['alpha'])*self.vb)/self.vb)/\
+                              par1['lambda']+par1['td_std'][self.celltype]*temp_zscore
+                self.t_div = self.tb + self.t_grow
+                self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)
+            else:
+                temp = np.random.normal(0.0, 1.0, size=1)[0]
+                self.gr = par1['lambda'] * (1 + par1['lambda_std'] * temp)
+                self.t_grow = np.log(
+                    (2 * par1['alpha'] * par1['delta'] + 2 * (1.0 - par1['alpha']) * self.vb) / self.vb) / \
+                              self.gr + par1['td_std'][self.celltype] * temp_zscore
+                self.t_div = self.tb + self.t_grow
+                self.vd = self.vb * np.exp(self.gr * self.t_grow)
             # print self.t_grow
         # self.t_div = self.tb + np.amax([self.t_grow, 0.0])
-        self.t_div = self.tb + self.t_grow
-        self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)
+
+
         Cell.cellCount += 1
 
     def grow(self, par1):  # par1 contains all details for the specified cell
@@ -107,29 +128,48 @@ class Cell(object):
                 self.t_grow = self.parent_current.td_out_zscores[1] * par1['td_std'][self.celltype] \
                               + par1['td'][self.celltype]  # the second z score corresponds to the current daughter
                 self.td_out_zscores = [np.random.normal(0.0,1.0,size=1)[0]]  # only one output z-score in this case
+            self.t_div = self.tb + np.amax([self.t_grow, 0.0])
+            self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)
         elif par1['modeltype'] == 1:  # simple adder model
             temp_zscore = np.random.normal(0.0, 1.0, size=1)[0]
             if par1['lambda_std'] is None:
                 self.t_grow = np.log(1 + par1['delta'] / self.vb) / par1['lambda'] + temp_zscore * par1['td_std'][
                     self.celltype]
+                self.t_div = self.tb + np.amax([self.t_grow, 0.0])
+                self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)
             else:
                 temp = np.random.normal(0.0, 1.0, size=1)[0]
                 self.gr = par1['lambda'] * (1 + par1['lambda_std'] * temp)
                 self.t_grow = np.log(1 + par1['delta'] / self.vb) / self.gr + temp_zscore * par1['td_std'][
                     self.celltype]
+                self.t_div = self.tb + np.amax([self.t_grow, 0.0])
+                self.vd = self.vb * np.exp(self.gr * self.t_grow)
             # print self.t_grow
-        self.t_div = self.tb + np.amax([self.t_grow, 0.0])
-        self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)
+        elif par1['modeltype'] == 2:  # alpha tunable model from Lin and Amir
+            temp_zscore = np.random.normal(0.0, 1.0, size=1)[0]
+            if par1['lambda_std'] is None:
+                self.t_grow = np.log((2*par1['alpha']*par1['delta']+2*(1.0-par1['alpha'])*self.vb)/self.vb)/\
+                              par1['lambda']+par1['td_std'][self.celltype]*temp_zscore
+                self.t_div = self.tb + max(self.t_grow, 0.0)
+                self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)
+            else:
+                temp = np.random.normal(0.0, 1.0, size=1)[0]
+                self.gr = par1['lambda'] * (1 + par1['lambda_std'] * temp)
+                self.t_grow = np.log(
+                    (2 * par1['alpha'] * par1['delta'] + 2 * (1.0 - par1['alpha']) * self.vb) / self.vb) / \
+                              self.gr + par1['td_std'][self.celltype] * temp_zscore
+                self.t_div = self.tb + max(self.t_grow, 0.0)
+                self.vd = self.vb * np.exp(self.gr * self.t_grow)
         Cell.cellCount += 1
 
 
     def size(self, par1, t):  # this evaluates the volume of this cell at a particular point in time
-        if par1['modeltype']==1:
-            if par1['lambda_std'] is None:
-                temp = par1['lambda']
-            else:
-                temp = self.gr
-            temp1 = self.vb*np.exp(temp*(t-self.tb))
+        # if par1['modeltype']==1:
+        if par1['lambda_std'] is None:
+            temp = par1['lambda']
+        else:
+            temp = self.gr
+        temp1 = self.vb*np.exp(temp*(t-self.tb))
         return temp1
 
 
@@ -143,6 +183,9 @@ def starting_popn(par1):
     elif par1['modeltype'] == 1:  # set the average size distributions to begin with here.
         vm = 2.0*par1['delta']/(1+par1['r'])
         vd = 2*par1['r']*par1['delta']/(1+par1['r'])
+    elif par1['modeltype'] == 2:  # set the average size distributions to begin with here.
+        vm = par1['delta']/(1+par1['r'])
+        vd = par1['r']*par1['delta']/(1+par1['r'])
 
     v_init_d = np.random.normal(loc=vd, scale=par['std_v'] * vd, size=par['num_s'])
     v_init_m = np.random.normal(loc=vm, scale=par['std_v'] * vm, size=par['num_s'])

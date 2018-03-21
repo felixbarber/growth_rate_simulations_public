@@ -14,7 +14,7 @@ import growth_simulations as g
 # this script uses a simple adder model and takes r=0.5
 
 
-par1 = {'nstep': 1000, 'dt':0.01, 'td': None, 'td_std': None, 'v_init':1.0, 'modeltype':1, 'delta':1.0, 'lambda_std':None}
+par1 = {'nstep': 1000, 'dt':0.01, 'td': None, 'td_std': None, 'v_init':1.0, 'modeltype':4, 'delta':1.0, 'lambda_std':None}
 
 # defining r and lambda simply
 
@@ -81,5 +81,4 @@ for i0 in range(len(vals)):
             np.save('./data/growth_rate_tester_11_{0}_{1}_{2}.npy'.format(i0, i1, i2), stored_vals)
             print 'finished', i0, i1, i2
             del tgrow, temp2, t1, t2, init_pop, c, obs, stored_vals
-# np.save('./growth_rate_tester_11_output_data',output_data) # this was run before a threshold in interdivision time was imposed
-
+np.save('./growth_rate_tester_13_output_data',output_data)

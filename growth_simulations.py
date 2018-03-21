@@ -15,7 +15,8 @@ par = dict([('num_s', 50), ('vd', 1.0), ('vm', 1.0), ('std_v', 0.1)])
 # modeltype 0 is the model from cerulus et al., with an asymmetrically dividing, non-budding growth morphology defined
 # by r
 # modeltype 1 is a simple adder model, with an asymmetrically dividing, non-budding growth morphology defined by r
-
+list1=[1,4]  # 1 is asymmetric, 4 is asymmetric budding.
+list2 = [4]  # budding growth morphology
 
 def fn(L, tm, td):
     return np.exp(-L * td) + np.exp(-L * tm) - 1.0
@@ -69,17 +70,18 @@ class Cell(object):
             #     print par1['A_mm'], self.td_zscore, par1['trans_std_mm'], self.t_grow
             self.t_div = self.tb + self.t_grow
             self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)
-        elif par1['modeltype'] == 1:  # simple adder model
+        elif par1['modeltype'] in list1:  # simple adder model
             temp_zscore = np.random.normal(0.0, 1.0, size=1)[0]
             if par1['lambda_std'] is None:
-                self.t_grow = np.log(1 + par1['delta'] / self.vb) / par1['lambda'] + temp_zscore*par1['td_std'][self.celltype]
+                self.t_grow = max(np.log(1 + par1['delta'] / self.vb) / par1['lambda'] + temp_zscore*par1['td_std'][self.celltype],
+                                  par1['dt'])
                 self.t_div = self.tb + self.t_grow
                 self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)
             else:
                 temp = np.random.normal(0.0, 1.0, size=1)[0]
                 self.gr = par1['lambda']*(1+par1['lambda_std']*temp)
-                self.t_grow = np.log(1 + par1['delta'] / self.vb) / self.gr + temp_zscore * par1['td_std'][
-                    self.celltype]
+                self.t_grow = max(np.log(1 + par1['delta'] / self.vb) / self.gr + temp_zscore * par1['td_std'][
+                    self.celltype], par1['dt'])
                 self.t_div = self.tb + self.t_grow
                 self.vd = self.vb * np.exp(self.gr * self.t_grow)
         elif par1['modeltype'] == 2:  # alpha tunable model from Lin and Amir
@@ -95,6 +97,20 @@ class Cell(object):
                 self.t_grow = np.log(
                     (2 * par1['alpha'] * par1['delta'] + 2 * (1.0 - par1['alpha']) * self.vb) / self.vb) / \
                               self.gr + par1['td_std'][self.celltype] * temp_zscore
+                self.t_div = self.tb + self.t_grow
+                self.vd = self.vb * np.exp(self.gr * self.t_grow)
+        elif par1['modeltype'] == 3:  # alpha tunable model from Amir 2014
+            temp_zscore = np.random.normal(0.0, 1.0, size=1)[0]
+            if par1['lambda_std'] is None:
+                self.t_grow = max(np.log(2 * (par1['delta'] / self.vb)**(par1['alpha'])) / par1['lambda'] + \
+                    par1['td_std'][self.celltype] * temp_zscore, par1['dt'])
+                self.t_div = self.tb + self.t_grow
+                self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)
+            else:
+                temp = np.random.normal(0.0, 1.0, size=1)[0]
+                self.gr = par1['lambda'] * (1 + par1['lambda_std'] * temp)
+                self.t_grow = max(np.log(2 * (par1['delta'] / self.vb) ** (par1['alpha'])) / self.gr + \
+                              par1['td_std'][self.celltype] * temp_zscore, par1['dt'])
                 self.t_div = self.tb + self.t_grow
                 self.vd = self.vb * np.exp(self.gr * self.t_grow)
             # print self.t_grow
@@ -130,19 +146,19 @@ class Cell(object):
                 self.td_out_zscores = [np.random.normal(0.0,1.0,size=1)[0]]  # only one output z-score in this case
             self.t_div = self.tb + np.amax([self.t_grow, 0.0])
             self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)
-        elif par1['modeltype'] == 1:  # simple adder model
+        elif par1['modeltype'] in list1:  # simple adder model
             temp_zscore = np.random.normal(0.0, 1.0, size=1)[0]
             if par1['lambda_std'] is None:
-                self.t_grow = np.log(1 + par1['delta'] / self.vb) / par1['lambda'] + temp_zscore * par1['td_std'][
-                    self.celltype]
-                self.t_div = self.tb + np.amax([self.t_grow, 0.0])
+                self.t_grow = max(np.log(1 + par1['delta'] / self.vb) / par1['lambda'] + temp_zscore * par1['td_std'][
+                    self.celltype], par1['dt'])
+                self.t_div = self.tb + self.t_grow
                 self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)
             else:
                 temp = np.random.normal(0.0, 1.0, size=1)[0]
                 self.gr = par1['lambda'] * (1 + par1['lambda_std'] * temp)
-                self.t_grow = np.log(1 + par1['delta'] / self.vb) / self.gr + temp_zscore * par1['td_std'][
-                    self.celltype]
-                self.t_div = self.tb + np.amax([self.t_grow, 0.0])
+                self.t_grow = max(np.log(1 + par1['delta'] / self.vb) / self.gr + temp_zscore * par1['td_std'][
+                    self.celltype], par1['dt'])
+                self.t_div = self.tb + self.t_grow
                 self.vd = self.vb * np.exp(self.gr * self.t_grow)
             # print self.t_grow
         elif par1['modeltype'] == 2:  # alpha tunable model from Lin and Amir
@@ -160,8 +176,21 @@ class Cell(object):
                               self.gr + par1['td_std'][self.celltype] * temp_zscore
                 self.t_div = self.tb + max(self.t_grow, 0.0)
                 self.vd = self.vb * np.exp(self.gr * self.t_grow)
+        elif par1['modeltype'] == 3:  # alpha tunable model from Amir 2014
+            temp_zscore = np.random.normal(0.0, 1.0, size=1)[0]
+            if par1['lambda_std'] is None:
+                self.t_grow = max(np.log(2 * (par1['delta'] / self.vb)**(par1['alpha'])) / par1['lambda'] + \
+                    par1['td_std'][self.celltype] * temp_zscore, par1['dt'])
+                self.t_div = self.tb + self.t_grow
+                self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)
+            else:
+                temp = np.random.normal(0.0, 1.0, size=1)[0]
+                self.gr = par1['lambda'] * (1 + par1['lambda_std'] * temp)
+                self.t_grow = max(np.log(2 * (par1['delta'] / self.vb) ** (par1['alpha'])) / self.gr + \
+                              par1['td_std'][self.celltype] * temp_zscore, par1['dt'])
+                self.t_div = self.tb + self.t_grow
+                self.vd = self.vb * np.exp(self.gr * self.t_grow)
         Cell.cellCount += 1
-
 
     def size(self, par1, t):  # this evaluates the volume of this cell at a particular point in time
         # if par1['modeltype']==1:
@@ -180,10 +209,13 @@ def starting_popn(par1):
         # condition. Note that by contrast with model 1, we have the same relative scaling between vd and vm to begin.
         vd = par1['r']*par1['v_init']
         vm = par1['v_init']
-    elif par1['modeltype'] == 1:  # set the average size distributions to begin with here.
+    elif par1['modeltype'] in list1:  # set the average size distributions to begin with here.
         vm = 2.0*par1['delta']/(1+par1['r'])
         vd = 2*par1['r']*par1['delta']/(1+par1['r'])
     elif par1['modeltype'] == 2:  # set the average size distributions to begin with here.
+        vm = par1['delta']/(1+par1['r'])
+        vd = par1['r']*par1['delta']/(1+par1['r'])
+    elif par1['modeltype'] == 3:  # set the average size distributions to begin with here.
         vm = par1['delta']/(1+par1['r'])
         vd = par1['r']*par1['delta']/(1+par1['r'])
 
@@ -230,7 +262,11 @@ def next_gen(index, f, t, par1):
     # This function resets growth-policy specific variables for a single birth event.
     # Should be used within discr_time to evolve the list of cells c.
     # frac = max((f[index].vd-f[index].vi)/f[index].vd, 0.0)
-    frac1 = par1['r']/(1+par1['r'])
+    if par1['modeltype'] in list2:
+        frac1 = min(par1['r']/(1+par1['r']), (f[index].vd-f[index].vb)/f[index].vd)  # ensures that cells do not
+        # shrink over subsequent generations (i.e. that newborn daughter size is at most the new growth added)
+    else:
+        frac1 = par1['r']/(1+par1['r'])
 
     # add new cell for new cycle of mother cell.
     temp = [t, 0, weakref.proxy(f[index]), (1-frac1) * f[index].vd, None]

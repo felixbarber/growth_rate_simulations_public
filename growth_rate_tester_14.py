@@ -14,7 +14,7 @@ import growth_simulations as g
 font = {'family': 'normal', 'weight': 'bold', 'size': 22}
 plt.rc('font', **font)
 
-vals = np.load('./growth_rate_tester_11v2_output_data.npy')
+vals = np.load('./growth_rate_tester_13_output_data.npy')
 num_outputs = 6  # growth rate, optimal growth rate, R2 mm, R2 md, R2 md diff gen, volume growth rate
 r2=True
 if r2:
@@ -36,7 +36,7 @@ print temp_labels
 figs = g.heat_maps(np.squeeze(vals[:, :, :, temp_ind]), temp_labels, x_std=d_std, y_std=m_std)
 
 for i0 in range(len(figs)):
-    figs[i0].savefig('./growth_rate_tester_11_plots/adder_{0}_lambda_{1}.png'.format(i0, temp_ind))
+    figs[i0].savefig('./growth_rate_tester_13_plots/adder_{0}_lambda_{1}.png'.format(i0, temp_ind))
     print vals[i0, 0, 0, 0], vals[i0, 5, 0, 0]
 
 temp_labels = []
@@ -47,7 +47,7 @@ print temp_labels
 figs = g.heat_maps(np.squeeze(vals[:, :, :, temp_ind]), temp_labels, x_std=d_std, y_std=m_std)
 
 for i0 in range(len(figs)):
-    figs[i0].savefig('./growth_rate_tester_11_plots/adder_{0}_lambda_{1}.png'.format(i0, temp_ind))
+    figs[i0].savefig('./growth_rate_tester_13_plots/adder_{0}_lambda_{1}.png'.format(i0, temp_ind))
     print vals[i0, 0, 0, 0], vals[i0, 5, 0, 0]
 
 temp_labels = []
@@ -58,5 +58,5 @@ print temp_labels
 figs = g.heat_maps(np.squeeze(vals[:, :, :, temp_ind]), temp_labels, x_std=d_std, y_std=m_std)
 
 for i0 in range(len(figs)):
-    figs[i0].savefig('./growth_rate_tester_11_plots/adder_{0}_lambda_{1}.png'.format(i0, temp_ind))
+    figs[i0].savefig('./growth_rate_tester_13_plots/adder_{0}_lambda_{1}.png'.format(i0, temp_ind))
     print vals[i0, 0, 0, 0], vals[i0, 5, 0, 0]

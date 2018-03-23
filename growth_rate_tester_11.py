@@ -82,4 +82,4 @@ for i0 in range(len(vals)):
             print 'finished', i0, i1, i2
             del tgrow, temp2, t1, t2, init_pop, c, obs, stored_vals
 # np.save('./growth_rate_tester_11_output_data',output_data) # this was run before a threshold in interdivision time was imposed
-
+np.save('./growth_rate_tester_11v2_output_data',output_data) # this was run after a threshold in interdivision time was imposed

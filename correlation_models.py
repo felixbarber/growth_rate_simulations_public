@@ -39,6 +39,7 @@ def mom2_x(par1, celltype): # <x^2>
 
 
 def pcc_md_diffgen(par1):
+    # print par1['alpha']
     temp = fn(par1)/(fn_1(par1, 1)**0.5*fn_1(par1, 2)**0.5)
     return temp
 

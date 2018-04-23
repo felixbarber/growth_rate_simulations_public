@@ -18,6 +18,7 @@ par = dict([('num_s', 50), ('vd', 1.0), ('vm', 1.0), ('std_v', 0.1)])
 list1=[1,4]  # 1 is asymmetric, 4 is asymmetric budding.
 list2 = [4]  # budding growth morphology
 
+
 def fn(L, tm, td):
     return np.exp(-L * td) + np.exp(-L * tm) - 1.0
 
@@ -75,6 +76,7 @@ class Cell(object):
             if par1['lambda_std'] is None:
                 self.t_grow = max(np.log(1 + par1['delta'] / self.vb) / par1['lambda'] + temp_zscore*par1['td_std'][self.celltype],
                                   par1['dt'])
+                # self.t_grow=np.log(1 + par1['delta'] / self.vb) / par1['lambda'] + temp_zscore * par1['td_std'][self.celltype]
                 self.t_div = self.tb + self.t_grow
                 self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)
             else:
@@ -149,8 +151,9 @@ class Cell(object):
         elif par1['modeltype'] in list1:  # simple adder model
             temp_zscore = np.random.normal(0.0, 1.0, size=1)[0]
             if par1['lambda_std'] is None:
-                self.t_grow = max(np.log(1 + par1['delta'] / self.vb) / par1['lambda'] + temp_zscore * par1['td_std'][
+                self.t_grow = max(np.log(1.0 + par1['delta'] / self.vb) / par1['lambda'] + temp_zscore * par1['td_std'][
                     self.celltype], par1['dt'])
+                # self.t_grow=np.log(1 + par1['delta'] / self.vb) / par1['lambda'] + temp_zscore * par1['td_std'][self.celltype]
                 self.t_div = self.tb + self.t_grow
                 self.vd = self.vb * np.exp(par1['lambda'] * self.t_grow)
             else:
@@ -158,6 +161,8 @@ class Cell(object):
                 self.gr = par1['lambda'] * (1 + par1['lambda_std'] * temp)
                 self.t_grow = max(np.log(1 + par1['delta'] / self.vb) / self.gr + temp_zscore * par1['td_std'][
                     self.celltype], par1['dt'])
+                # self.t_grow = np.log(1 + par1['delta'] / self.vb) / self.gr + temp_zscore * par1['td_std'][
+                #     self.celltype]
                 self.t_div = self.tb + self.t_grow
                 self.vd = self.vb * np.exp(self.gr * self.t_grow)
             # print self.t_grow

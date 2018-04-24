@@ -21,7 +21,7 @@ td_std = [0.4727, 0.9214]
 
 
 par1 = {'nstep': 1000, 'dt':0.01, 'td': td, 'td_std': td_std, 'v_init':1.0, 'modeltype':1, 'A_mm':0.129,
-    'trans_std_mm':0.9916, 'A_md':0.5086, 'trans_std_md':0.8610, 'delta':1.0, 'lambda_std':0.3}
+    'trans_std_mm':0.9916, 'A_md':0.5086, 'trans_std_md':0.8610, 'delta':1.0, 'lambda_std':0.2}
 
 # defining r and lambda to approximate the same average division times for daughters and mothers.
 
@@ -31,8 +31,8 @@ par1['r'] = temp/(1-temp)
 
 # At this stage all we vary is the noise in interdivision times.
 vals, offset =  np.linspace(0.0,1.0,11), 0.01
-num_outputs = 4  # growth rate, optimal growth rate, R2 mm, R2 md
-output_data = np.zeros([4, 11, 11])
+num_outputs = 5  # growth rate, optimal growth rate, R2 mm, R2 md, volume growth rate
+output_data = np.zeros([num_outputs, 11, 11])
 for i0 in range(11):
     for i1 in range(11):
         td_std = [vals[i0]+offset, vals[i1]+offset]
@@ -58,6 +58,8 @@ for i0 in range(11):
         temp2.append(scipy.stats.linregress(t4, t3))
         output_data[2, i0, i1] = temp2[0][2]**2
         output_data[3, i0, i1] = temp2[1][2]**2
+        temp3 = scipy.stats.linregress(obs[1][400:], np.log(obs[7][400:]))
+        output_data[4, i0, i1] = temp3[0]
         print 'finished', i0, i1
         del temp1, tgrow, temp2, t1, t2, t3, t4, opt_val, init_pop, c, obs
 np.save('./growth_rate_tester_7_output_data',output_data)

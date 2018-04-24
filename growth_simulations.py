@@ -3,7 +3,7 @@ import scipy
 import scipy.optimize
 import weakref
 import matplotlib
-matplotlib.use("agg")
+# matplotlib.use("agg")
 import matplotlib.pyplot as plt
 import time
 import seaborn as sns
@@ -16,8 +16,9 @@ par = dict([('num_s', 50), ('vd', 1.0), ('vm', 1.0), ('std_v', 0.1)])
 # by r
 # modeltype 1 is a simple adder model, with an asymmetrically dividing, non-budding growth morphology defined by r
 list1=[1,4]  # 1 is asymmetric, 4 is asymmetric budding.
-list2 = [4]  # budding growth morphology
-
+list2 = [4, 5]  # budding growth morphology
+list3 = [5]  # start to start adder
+# modeltype 5 is a budding, start to start adder. Effectively the inhibitor dilution model but tracking whi5 implicitly
 
 def fn(L, tm, td):
     return np.exp(-L * td) + np.exp(-L * tm) - 1.0
@@ -117,8 +118,21 @@ class Cell(object):
                 self.vd = self.vb * np.exp(self.gr * self.t_grow)
             # print self.t_grow
         # self.t_div = self.tb + np.amax([self.t_grow, 0.0])
-
-
+        elif par1['modeltype'] in list3:  # start to start adder model
+            # this part assumes no noise
+            if self.celltype == 0: # mother cells
+                self.vs =  max((par1['delta']+self.vb)/(1+par1['r']), self.vb)
+            elif self.celltype == 1:  # daughter cells
+                self.vs = max((par1['r']*par1['delta']+self.vb)/(1+par1['r']),self.vb)
+            # now one can introduce noise in the budded growth, and in the growth rate
+            temp = np.random.normal(0.0, 1.0, size=2)
+            self.gr = par1['lambda'] * (1 + par1['lambda_std'] * temp[0])  # can call this even if noise in growth rate is
+            # zero
+            self.t_grow = max(np.log((1+par1['r'])*self.vs / self.vb) / self.gr+par1['tbud_std']*temp[1], par1['dt'])
+            # minimum time for division
+            self.t_div = self.tb + self.t_grow
+            self.vd = self.vb*np.exp(self.t_grow*self.gr)
+            self.r = (self.vd-self.vs)/self.vd
         Cell.cellCount += 1
 
     def grow(self, par1):  # par1 contains all details for the specified cell
@@ -195,6 +209,21 @@ class Cell(object):
                               par1['td_std'][self.celltype] * temp_zscore, par1['dt'])
                 self.t_div = self.tb + self.t_grow
                 self.vd = self.vb * np.exp(self.gr * self.t_grow)
+        elif par1['modeltype'] in list3:  # start to start adder model (inhibitor dilution)
+            # this part now allows for noise by using the parent's bud ratio
+            if self.celltype == 0: # mother cells
+                self.vs =  max((par1['delta']+self.vb)/(1+self.parent.r), self.vb)
+            elif self.celltype == 1:  # daughter cells
+                self.vs = max((par1['delta']*self.parent.r+self.vb)/(1+self.parent.r),self.vb)
+            # now one can introduce noise in the budded growth, and in the growth rate
+            temp = np.random.normal(0.0, 1.0, size=2)
+            self.gr = par1['lambda'] * (1 + par1['lambda_std'] * temp[0])  # can call this even if noise in growth rate is
+            # zero
+            self.t_grow = max(np.log((1+par1['r'])*self.vs / self.vb) / self.gr+par1['tbud_std']*temp[1], par1['dt'])
+            # minimum time for division
+            self.t_div = self.tb + self.t_grow
+            self.vd = self.vb*np.exp(self.t_grow*self.gr)
+            self.r = (self.vd-self.vs)/self.vs
         Cell.cellCount += 1
 
     def size(self, par1, t):  # this evaluates the volume of this cell at a particular point in time
@@ -223,6 +252,9 @@ def starting_popn(par1):
     elif par1['modeltype'] == 3:  # set the average size distributions to begin with here.
         vm = par1['delta']/(1+par1['r'])
         vd = par1['r']*par1['delta']/(1+par1['r'])
+    elif par1['modeltype'] == 5:  # inhibitor dilution model
+        vm = par1['delta']
+        vd = par1['r']*par1['delta']
 
     v_init_d = np.random.normal(loc=vd, scale=par['std_v'] * vd, size=par['num_s'])
     v_init_m = np.random.normal(loc=vm, scale=par['std_v'] * vm, size=par['num_s'])
@@ -270,6 +302,8 @@ def next_gen(index, f, t, par1):
     if par1['modeltype'] in list2:
         frac1 = min(par1['r']/(1+par1['r']), (f[index].vd-f[index].vb)/f[index].vd)  # ensures that cells do not
         # shrink over subsequent generations (i.e. that newborn daughter size is at most the new growth added)
+    elif par1['modeltype'] in list3:  # start to start adder (inhibitor dilution model)
+        frac1 = f[index].r/(1+f[index].r)
     else:
         frac1 = par1['r']/(1+par1['r'])
 

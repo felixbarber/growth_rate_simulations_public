@@ -6,5 +6,10 @@ studying the growth rate of an asymmetrically dividing cells, and for the public
 
 General Simulation script
  	growth_simulations.py
+Simulation scripts for specific conditions
+	 191028_inh_dil_size_control_sim.py
+	191111_inh_dil_size_control_v1.py
+	191111_inh_dil_size_control_v2.py
+	191111_inh_dil_size_control_v3.py
 Script to generate specific figures
 	whi5_expt_perturbation_simulations.ipynb
